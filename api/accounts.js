@@ -15,6 +15,7 @@ const {
   removeGameFromCollection
 } = require('../endpoints/removeGameFromCollection');
 const { updatePlatforms } = require('../endpoints/updatePlatforms');
+const { updateCollection } = require('../endpoints/updateCollection');
 
 require('dotenv').config();
 
@@ -113,6 +114,10 @@ api.post('/removeGameFromCollection', authenticate, (req, res) => {
 
 api.post('/updatePlatforms', authenticate, (req, res) => {
   updatePlatforms(req, res);
+});
+
+api.post('/updateCollection', (req, res) => {
+  updateCollection(req, res);
 });
 
 module.exports = api;

@@ -18,10 +18,49 @@
             <h1 v-if="$vuetify.breakpoint.xs" class="app-display-1">{{ gameData.name }}</h1>
           </v-col>
         </v-row>
+
+        <v-row v-if="gameData.screenshots && gameData.screenshots.length > 0">
+          <v-col v-for="(screenshot, i) in gameData.screenshots" :key="i" cols="12" lg="4">
+            <v-img contain :src="screenshot.fullRes"></v-img>
+          </v-col>
+        </v-row>
+
         <v-row>
           <v-col cols="12" lg="8">
+            <v-card v-if="!$vuetify.breakpoint.lgAndUp" style="margin-bottom: 10px">
+              <v-card-title>OpenCritic Average</v-card-title>
+              <v-card-text>
+                <div class="scoremeter-container" v-if="gameData.averageScore">
+                  <div
+                    class="scoremeter-value"
+                    :style="{width: `${gameData.averageScore}%`}"
+                    :class="{ 'score-high': parseInt(gameData.averageScore) > 69, 'score-mid': parseInt(gameData.averageScore) > 39 && parseInt(gameData.averageScore) < 70, 'score-low': parseInt(gameData.averageScore) < 40 }"
+                  ></div>
+                </div>
+                <br />
+                <h2 class="app-title" v-if="gameData.averageScore">{{ gameData.averageScore }} / 100</h2>
+                <p class="app-title" v-else>No reviews available.</p>
+              </v-card-text>
+              <v-img :src="gameData.image.original_url" contain width="100%"></v-img>
+            </v-card>
+
             <p v-html="gameData.deck"></p>
             <!-- use v-html in case the deck has things like &nbsp; or &amp; -->
+            <div class="trailer-container" v-if="gameData.trailers && gameData.trailers.length > 0">
+              <p>
+                <b>Trailer</b>
+              </p>
+              <iframe
+                :width="$vuetify.breakpoint.smAndUp ? 560 : '100%'"
+                :height="$vuetify.breakpoint.smAndUp ? 315 : 200"
+                :src="gameData.trailers[0].externalUrl.replace('watch?v=', 'embed/')"
+                frameborder="0"
+                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+              ></iframe>
+              <br />
+              <br />
+            </div>
             <p>
               <b>Original release</b>
               <br />
@@ -72,10 +111,6 @@
                 <br />
               </span>
             </p>
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
             <v-btn
               class="app-colour"
               dark
@@ -85,19 +120,38 @@
             >
               <v-icon left>mdi-open-in-new</v-icon>WIKI ARTICLE
             </v-btn>
-          </v-col>
-        </v-row>
-        <v-row v-if="owned">
-          <v-col>
+            <br />
+            <br />
             <v-btn
+              v-if="owned"
               color="red"
               dark
               elevation="0"
               @click="confirmDelete = true"
               :block="$vuetify.breakpoint.xs ? true : false"
             >
-              <v-icon left>mdi-delete</v-icon>REMOVE FROM COLLECTION
+              <v-icon left>mdi-delete</v-icon>REMOVE FROM CHEST
             </v-btn>
+          </v-col>
+
+          <v-col cols="12" lg="4" v-if="$vuetify.breakpoint.lgAndUp">
+            <v-card>
+              <v-card-title>OpenCritic Average</v-card-title>
+
+              <v-card-text>
+                <div class="scoremeter-container" v-if="gameData.averageScore">
+                  <div
+                    class="scoremeter-value"
+                    :style="{width: `${gameData.averageScore}%`}"
+                    :class="{ 'score-high': parseInt(gameData.averageScore) > 69, 'score-mid': parseInt(gameData.averageScore) > 39 && parseInt(gameData.averageScore) < 70, 'score-low': parseInt(gameData.averageScore) < 40 }"
+                  ></div>
+                </div>
+                <br />
+                <h2 class="app-title" v-if="gameData.averageScore">{{ gameData.averageScore }} / 100</h2>
+                <p class="app-title" v-else>No reviews available.</p>
+              </v-card-text>
+              <v-img :src="gameData.image.original_url" contain width="100%"></v-img>
+            </v-card>
           </v-col>
         </v-row>
       </div>
@@ -202,26 +256,18 @@ export default {
       saving: false,
       cachedPlatforms: [],
       gameData: {
-        aliases: "",
-        api_detail_url: "",
-        date_added: "",
-        date_last_updated: "",
         deck: "",
-        description: "",
-        expected_release_day: null,
-        expected_release_month: null,
-        expected_release_quarter: null,
-        expected_release_year: null,
         guid: "",
-        id: 0,
         image: {},
-        image_tags: [],
         name: "",
-        number_of_user_reviews: 0,
-        original_game_rating: [],
         original_release_date: "",
         platforms: [],
-        site_detail_url: ""
+        developers: [],
+        publishers: [],
+        genres: [],
+        trailers: [],
+        screenshots: [],
+        averageScore: ""
       }
     };
   },
@@ -244,6 +290,61 @@ export default {
     ...mapActions(["addMessage", "resetMessagesState"]),
     goToWiki() {
       window.open(`https://giantbomb.com/game/${this.gameData.guid}/`);
+    },
+    refreshData() {
+      axios
+        .post("/getGameByGUID", {
+          guid: this.$route.params.guid
+        })
+        .then(response => {
+          if (response && response.data && response.data.success) {
+            let dataGb = response.data.data;
+            // Check to see if OpenCritic has data for this game
+            axios
+              .post("/getOpenCriticData", {
+                game: dataGb.name
+              })
+              .then(response => {
+                if (response && response.data && response.data.success) {
+                  dataGb = Object.assign(dataGb, response.data.data);
+                }
+                axios
+                  .post("/getGameByGUIDLocal", {
+                    guid: this.$route.params.guid
+                  })
+                  .then(response => {
+                    if (response && response.data && response.data.success) {
+                      // Got game from user collection
+                      let gameData = Object.assign(dataGb, response.data.data);
+                      this.gameData = gameData;
+                      this.loading = false;
+                    } else {
+                      // User does not have this game in their collection
+                      this.gameData = dataGb;
+                      this.gameData.platforms.forEach(platform => {
+                        platform.owned = false;
+                      });
+                      this.loading = false;
+                    }
+                  })
+                  .catch(err => {
+                    console.log(err);
+                    this.addMessage({ type: "error", msg: "Database error." });
+                    this.loading = false;
+                  });
+              })
+              .catch(err => console.log(err));
+          } else {
+            // Couldn't find game in GB API
+            this.addMessage({ type: "error", msg: "Unable to find game." });
+            this.loading = false;
+          }
+        })
+        .catch(err => {
+          console.log(err);
+          this.addMessage({ type: "error", msg: "Database error." });
+          this.loading = false;
+        });
     },
     updatePlatforms() {
       this.platformSelect = false;
@@ -291,57 +392,7 @@ export default {
 
             // Now run same script as previously run during created() to reload the page
             this.loading = true;
-            axios
-              .post("/getGameByGUID", {
-                guid: this.$route.params.guid
-              })
-              .then(response => {
-                if (response && response.data && response.data.success) {
-                  let dataGb = response.data.data;
-                  axios
-                    .post("getGameByGUIDLocal", {
-                      guid: this.$route.params.guid
-                    })
-                    .then(response => {
-                      if (response && response.data && response.data.success) {
-                        // Got game from user collection
-                        let gameData = Object.assign(
-                          dataGb,
-                          response.data.data
-                        );
-                        this.gameData = gameData;
-                        this.loading = false;
-                      } else {
-                        // User does not have this game in their collection
-                        this.gameData = dataGb;
-                        this.gameData.platforms.forEach(platform => {
-                          platform.owned = false;
-                        });
-                        this.loading = false;
-                      }
-                    })
-                    .catch(err => {
-                      console.log(err);
-                      this.addMessage({
-                        type: "error",
-                        msg: "Database error."
-                      });
-                      this.loading = false;
-                    });
-                } else {
-                  // Couldn't find game in GB API
-                  this.addMessage({
-                    type: "error",
-                    msg: "Unable to find game."
-                  });
-                  this.loading = false;
-                }
-              })
-              .catch(err => {
-                console.log(err);
-                this.addMessage({ type: "error", msg: "Database error." });
-                this.loading = false;
-              });
+            this.refreshData();
           } else {
             this.addMessage({ type: "error", msg: response.data.msg });
             this.deleting = false;
@@ -366,48 +417,7 @@ export default {
   },
   created() {
     this.resetMessagesState();
-    axios
-      .post("/getGameByGUID", {
-        guid: this.$route.params.guid
-      })
-      .then(response => {
-        if (response && response.data && response.data.success) {
-          let dataGb = response.data.data;
-          axios
-            .post("getGameByGUIDLocal", {
-              guid: this.$route.params.guid
-            })
-            .then(response => {
-              if (response && response.data && response.data.success) {
-                // Got game from user collection
-                let gameData = Object.assign(dataGb, response.data.data);
-                this.gameData = gameData;
-                this.loading = false;
-              } else {
-                // User does not have this game in their collection
-                this.gameData = dataGb;
-                this.gameData.platforms.forEach(platform => {
-                  platform.owned = false;
-                });
-                this.loading = false;
-              }
-            })
-            .catch(err => {
-              console.log(err);
-              this.addMessage({ type: "error", msg: "Database error." });
-              this.loading = false;
-            });
-        } else {
-          // Couldn't find game in GB API
-          this.addMessage({ type: "error", msg: "Unable to find game." });
-          this.loading = false;
-        }
-      })
-      .catch(err => {
-        console.log(err);
-        this.addMessage({ type: "error", msg: "Database error." });
-        this.loading = false;
-      });
+    this.refreshData();
   },
   filters: {
     showYearOnly: function(date) {
@@ -424,5 +434,30 @@ export default {
   bottom: 0;
   padding: 10px 20px;
   background-color: #3f51b5;
+}
+
+.scoremeter-container {
+  display: block;
+  width: 100%;
+  height: 12px;
+  border-radius: 5px;
+}
+
+.scoremeter-value {
+  display: block;
+  height: 10px;
+  border-radius: 5px;
+}
+
+.score-high {
+  background-color: green;
+}
+
+.score-mid {
+  background-color: orange;
+}
+
+.score-low {
+  background-color: red;
 }
 </style>

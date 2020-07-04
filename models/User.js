@@ -29,6 +29,10 @@ const UserSchema = new mongoose.Schema({
           type: String || null,
           required: false
         }
+      },
+      havePlayed: {
+        type: Boolean,
+        required: false
       }
     }
   ],
@@ -52,6 +56,10 @@ const UserSchema = new mongoose.Schema({
           type: String || null,
           required: false
         }
+      },
+      havePlayed: {
+        type: Boolean,
+        required: false
       }
     }
   ]

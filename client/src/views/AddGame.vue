@@ -106,6 +106,12 @@
               ></v-checkbox>
             </v-col>
           </v-row>
+          <v-divider></v-divider>
+          <v-row>
+            <v-col>
+              <v-checkbox label="I have played this game" v-model="havePlayed"></v-checkbox>
+            </v-col>
+          </v-row>
         </v-container>
         <v-divider></v-divider>
         <v-card-actions>
@@ -152,6 +158,7 @@ export default {
   data: () => {
     return {
       game: "",
+      havePlayed: true,
       results: [],
       searching: false,
       platformSelect: false, // Dialog flag
@@ -247,6 +254,7 @@ export default {
     },
     saveToCollection() {
       this.saving = true;
+      this.selectedGame.havePlayed = this.havePlayed;
       // Update DB
       axios
         .post("/addGameToCollection", {
@@ -298,6 +306,7 @@ export default {
         platforms: [],
         site_detail_url: ""
       };
+      this.havePlayed = true;
     }
   },
   filters: {

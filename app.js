@@ -4,6 +4,7 @@ const path = require('path');
 const axios = require('axios');
 const apiAccounts = require('./api/accounts');
 const apiGiantBomb = require('./api/gb');
+const apiOpenCritic = require('./api/oc');
 
 const app = express();
 require('dotenv').config();
@@ -16,6 +17,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Custom API libraries
 app.use(apiAccounts);
 app.use(apiGiantBomb);
+app.use(apiOpenCritic);
 
 // Serve from dist folder for build testing and prod
 app.use(express.static(path.join(__dirname, 'client/dist')));

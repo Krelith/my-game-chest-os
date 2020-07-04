@@ -5,7 +5,7 @@ module.exports = {
   getGameByGUID(req, res) {
     axios
       .get(
-        `https://www.giantbomb.com/api/game/${req.body.guid}/?api_key=${process.env.GIANTBOMB_API_KEY}&format=json`
+        `https://www.giantbomb.com/api/game/${req.body.guid}/?api_key=${process.env.GIANTBOMB_API_KEY}&format=json&field_list=name,guid,image,deck,original_release_date,platforms,developers,publishers,genres`
       )
       .then((response) => {
         if (

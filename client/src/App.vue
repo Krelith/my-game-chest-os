@@ -69,4 +69,8 @@ export default {
 .v-alert {
   margin-bottom: 0 !important;
 }
+
+.v-card__text {
+  color: rgba(0, 0, 0, 0.87) !important;
+}
 </style>

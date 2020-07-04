@@ -9,6 +9,7 @@ import MyGames from '../views/MyGames.vue';
 import AddGame from '../views/AddGame.vue';
 import Game from '../views/Game.vue';
 import Settings from '../views/Settings.vue';
+import UpdateChest from '../views/UpdateChest.vue';
 
 Vue.use(VueRouter);
 
@@ -75,6 +76,11 @@ const routes = [
     path: '/settings',
     name: 'Settings',
     component: Settings
+  },
+  {
+    path: '/update-chest/:type',
+    name: 'UpdateChest',
+    component: UpdateChest
   },
   // Logout
   {

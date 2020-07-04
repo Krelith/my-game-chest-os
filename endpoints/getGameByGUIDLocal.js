@@ -7,7 +7,6 @@ module.exports = {
       .then((user) => {
         let foundGame = false;
         for (let i = 0; i < user.games.length; i++) {
-          // Use a for loop instead of forEach (which cannot be stopped with a return statement)
           if (user.games[i].guid === req.body.guid) {
             foundGame = true;
             res.send(new Response(true, user.games[i]));

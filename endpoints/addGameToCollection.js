@@ -11,10 +11,8 @@ module.exports = {
     newGame.original_release_date = req.body.game.original_release_date;
     newGame.image = {};
     newGame.image.original_url = req.body.game.image.original_url;
-    // User.findOneAndUpdate(
-    //   { email: req.session.user },
-    //   { $push: { games: newGame, recentlyAdded: newGame } }
-    // )
+    newGame.havePlayed = req.body.game.havePlayed;
+
     User.findOne({ email: req.session.user }).then((user) => {
       user.games.unshift(newGame);
       if (user.recentlyAdded.length === 30) {
